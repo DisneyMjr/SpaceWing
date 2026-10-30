@@ -1,0 +1,5 @@
+Space Wing 2.2 - icone da nave, sprites PNG recortados, musica original WAV em loop.
+A musica inicia apos o primeiro toque por regra do Android WebView.
+APK de teste continua usando AdMob de teste.
+Para atualizar: substitua os arquivos do repositorio e execute git add .; git commit -m "Space Wing 2.2"; git pull --rebase origin main; git push origin main.
+Desinstalar app anterior pode limpar recordes/cristais. Preferir atualizar sem desinstalar.

@@ -61,3 +61,12 @@ git push origin main
 ```
 
 Não execute `git push --force`.
+
+
+## Versão 2.2
+- Novo ícone da nave, inclusive round e adaptive.
+- PNGs retrabalhados para minimizar fundos retangulares.
+- Música ambiente original em `app/src/main/assets/audio/trilha_espacial_original.wav` iniciada no primeiro toque, sincronizada com o botão de som e pausada ao sair do aplicativo.
+- `versionCode 5`, `versionName 2.2.0`.
+- AdMob de teste no APK debug e IDs próprios no release, exceto rewarded ainda de teste.
+- Testar no Android após compilar pelo GitHub Actions.

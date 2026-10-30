@@ -1,6 +1,6 @@
 (()=>{'use strict';
 const canvas=document.getElementById('game'),ctx=canvas.getContext('2d'),mute=document.getElementById('mute');
-const W=360,H=640,shipImage=new Image(),pipeTop=new Image(),pipeBottom=new Image();shipImage.src='nave.png';pipeTop.src='obstaculo_superior.png';pipeBottom.src='obstaculo_inferior.png';
+const W=360,H=640,shipImage=new Image(),pipeTop=new Image(),pipeBottom=new Image();shipImage.src='nave.png?v=22';pipeTop.src='obstaculo_superior.png?v=22';pipeBottom.src='obstaculo_inferior.png?v=22';
 const SHIPS=[['Pioneira','#ffdb27',0],['Cometa','#4ddcff',35],['Solar','#ff8b32',80],['Violeta','#c783ff',140],['Estelar','#75ff99',220],['Nebulosa','#fd82c8',300],['Titânio','#c9e2ff',430],['Relâmpago','#ffe660',560],['Galáctica','#6ce8ed',750],['Lendária','#ffd18a',1100]];
 const read=(k,f)=>{try{const v=JSON.parse(localStorage.getItem('sw2_'+k));return v==null?f:v}catch{return f}},save=(k,v)=>{try{localStorage.setItem('sw2_'+k,JSON.stringify(v))}catch{}};
 let best=read('best',0),bank=read('crystals',0),owned=read('owned',[0]),selected=read('ship',0),totalGames=read('games',0),achievements=read('achievements',[]),missionData=read('mission',{}),sound=read('sound',true),name=read('nickname','Piloto'),last=0,scale=1,ox=0,oy=0,mode='title',menu='title',score=0,runCrystals=0,elapsed=0,scroll=0,spawn=0,shipY=300,vy=0,obstacles=[],pickups=[],particles=[],texts=[],bgT=0,scene=0,shield=0,slow=0,magnet=0,revived=false,reviveReady=false,runScoreSubmitted=false,awardedScore=0,awardedCrystals=0,actx=null,weekly=read('weekly',{}),online=[],onlineStatus='offline',soundButton=mute;
@@ -14,9 +14,17 @@ function resize(){let d=window.devicePixelRatio||1;canvas.width=Math.round(inner
 const stars=Array.from({length:105},(_,i)=>({x:(i*73.7+17)%W,y:(i*39.3+61)%H,r:i%11===0?2:1,s:.15+(i%4)*.11}));
 function beep(f=550,d=.08,type='sine',end=f*.65,gain=.04){if(!sound)return;try{actx??=new(window.AudioContext||window.webkitAudioContext)();if(actx.state==='suspended')actx.resume();let o=actx.createOscillator(),v=actx.createGain(),t=actx.currentTime;o.type=type;o.frequency.setValueAtTime(f,t);o.frequency.exponentialRampToValueAtTime(Math.max(32,end),t+d);v.gain.setValueAtTime(gain,t);v.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(v);v.connect(actx.destination);o.start(t);o.stop(t+d)}catch{}}
 function sfx(kind){if(kind==='flap')beep(400,.065,'triangle',180,.025);if(kind==='coin'){beep(990,.11,'sine',1560);setTimeout(()=>beep(1360,.1,'sine',1750),70)}if(kind==='score')beep(760,.13,'triangle',1120);if(kind==='hit')beep(240,.31,'sawtooth',44,.08);if(kind==='unlock'){beep(540,.25,'sine',1150);setTimeout(()=>beep(850,.2,'triangle',1350),120)}if(kind==='power')beep(720,.25,'sine',1400)}
-soundButton.textContent=sound?'🔊':'🔇';soundButton.onclick=e=>{e.stopPropagation();sound=!sound;save('sound',sound);soundButton.textContent=sound?'🔊':'🔇'};
+// Trilha original Space Wing 2.2. O Android bloqueia autoplay até o primeiro toque.
+const backgroundMusic=new Audio('audio/trilha_espacial_original.wav');
+backgroundMusic.loop=true; backgroundMusic.volume=.18; backgroundMusic.preload='auto';
+let musicUnlocked=false;
+function musicStart(){musicUnlocked=true;if(sound&&!document.hidden)backgroundMusic.play().catch(()=>{});}
+function musicSync(){if(sound&&musicUnlocked&&!document.hidden)backgroundMusic.play().catch(()=>{});else backgroundMusic.pause();}
+document.addEventListener('visibilitychange',musicSync);
+window.addEventListener('pagehide',()=>backgroundMusic.pause());
+soundButton.textContent=sound?'🔊':'🔇';soundButton.onclick=e=>{e.stopPropagation();sound=!sound;save('sound',sound);soundButton.textContent=sound?'🔊':'🔇';musicStart();musicSync()};
 function hitRect(x,y,w,h){return lastPointer&&lastPointer.x>=x&&lastPointer.x<=x+w&&lastPointer.y>=y&&lastPointer.y<=y+h}let lastPointer=null;
-function pointer(e){e.preventDefault();let bounds=canvas.getBoundingClientRect(),x=(e.clientX-bounds.left)*canvas.width/bounds.width,y=(e.clientY-bounds.top)*canvas.height/bounds.height;lastPointer={x:x*W/canvas.width,y:y*H/canvas.height};let p=lastPointer;
+function pointer(e){musicStart();e.preventDefault();let bounds=canvas.getBoundingClientRect(),x=(e.clientX-bounds.left)*canvas.width/bounds.width,y=(e.clientY-bounds.top)*canvas.height/bounds.height;lastPointer={x:x*W/canvas.width,y:y*H/canvas.height};let p=lastPointer;
 if(mode==='play'){flap();return}
 if(mode==='over'){if(hitRect(34,390,292,48)){restart();return}if(hitRect(34,446,292,45)){mode='title';menu='title';return}if(hitRect(34,331,292,48)&&!revived){if(window.AndroidAds?.showRewarded){mode='rewardWait';window.AndroidAds.showRewarded()}else{bannerText('ANÚNCIO INDISPONÍVEL',190)}}return}
 if(mode==='rewardWait'){return}
@@ -27,7 +35,7 @@ else if(menu==='missions'){daily();for(let i=0;i<missions.length;i++){let m=miss
 else if(menu==='ranking'){if(hitRect(30,508,300,48)){let v=window.prompt('Nome para o ranking (2 a 18 letras)',name);if(v){name=v.trim().slice(0,18).replace(/[<>]/g,'');save('nickname',name);submitScore(best);fetchRanking()}return}}
 else if(menu==='events'){if(hitRect(25,498,310,47))menu='title'}
 }
-canvas.addEventListener('pointerdown',pointer);window.addEventListener('keydown',e=>{if(['Space','ArrowUp'].includes(e.code)){e.preventDefault();if(mode==='play')flap();else if(mode==='title'&&menu==='title')restart()}if(e.key==='Escape'){mode='title';menu='title'}});
+canvas.addEventListener('pointerdown',pointer);window.addEventListener('keydown',e=>{if(['Space','ArrowUp'].includes(e.code)){musicStart();e.preventDefault();if(mode==='play')flap();else if(mode==='title'&&menu==='title')restart()}if(e.key==='Escape'){mode='title';menu='title'}});
 function fx(x,y,col,n=8){for(let i=0;i<n;i++){let a=Math.random()*6.28,r=35+Math.random()*100;particles.push({x,y,vx:Math.cos(a)*r,vy:Math.sin(a)*r,ttl:.25+Math.random()*.35,c:col,s:2+Math.random()*3})}}
 function bannerText(t,y=160){texts.push({t,y,ttl:1.7})}
 function restart(){mode='play';menu='title';score=0;runCrystals=0;elapsed=0;spawn=.8;shipY=H*.43;vy=-155;obstacles=[];pickups=[];particles=[];shield=0;slow=0;magnet=0;revived=false;reviveReady=false;runScoreSubmitted=false;awardedScore=0;awardedCrystals=0;totalGames++;daily().played++;let k=weekKey();if(weekly.week!==k)weekly={week:k,score:0,games:0};weekly.games++;persist();sfx('flap')}

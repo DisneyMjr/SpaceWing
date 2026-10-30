@@ -7,8 +7,8 @@ android {
         applicationId 'br.com.spacewing.game'
         minSdk 24
         targetSdk 35
-        versionCode 3
-        versionName '2.0.0'
+        versionCode 5
+        versionName '2.2.0'
     }
     buildFeatures { buildConfig true }
     buildTypes {
