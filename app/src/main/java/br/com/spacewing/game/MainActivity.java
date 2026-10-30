@@ -16,6 +16,8 @@ import com.google.android.gms.ads.LoadAdError;
 import com.google.android.gms.ads.interstitial.InterstitialAd;
 import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback;
 import com.google.android.gms.ads.FullScreenContentCallback;
+import com.google.android.gms.ads.rewarded.RewardedAd;
+import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback;
 import com.google.android.ump.ConsentInformation;
 import com.google.android.ump.ConsentRequestParameters;
 import com.google.android.ump.UserMessagingPlatform;
@@ -25,6 +27,8 @@ public class MainActivity extends Activity {
     private static final String INTERSTITIAL_ID = BuildConfig.ADMOB_INTERSTITIAL_ID;
     private AdView banner;
     private InterstitialAd interstitial;
+    private RewardedAd rewarded;
+    private WebView gameWeb;
     private ConsentInformation consentInformation;
     private long lastAdTime = 0;
     private boolean adsRequested = false;
@@ -36,6 +40,7 @@ public class MainActivity extends Activity {
         root.setOrientation(LinearLayout.VERTICAL);
         root.setBackgroundColor(0xff050b21);
         WebView web = new WebView(this);
+        gameWeb = web;
         web.setBackgroundColor(0xff050b21);
         web.getSettings().setJavaScriptEnabled(true);
         web.getSettings().setDomStorageEnabled(true);
@@ -45,6 +50,7 @@ public class MainActivity extends Activity {
         web.setWebChromeClient(new WebChromeClient());
         web.addJavascriptInterface(new Object() {
             @JavascriptInterface public void showInterstitial() { runOnUiThread(() -> displayInterstitial()); }
+            @JavascriptInterface public void showRewarded() { runOnUiThread(() -> displayRewarded()); }
         }, "AndroidAds");
         root.addView(web, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1));
         banner = new AdView(this);
@@ -79,6 +85,7 @@ public class MainActivity extends Activity {
                 if (!isFinishing() && !isDestroyed()) {
                     banner.loadAd(new AdRequest.Builder().build());
                     loadInterstitial();
+                    loadRewarded();
                 }
             });
         }).start();
@@ -102,6 +109,31 @@ public class MainActivity extends Activity {
             @Override public void onAdFailedToShowFullScreenContent(com.google.android.gms.ads.AdError error) { loadInterstitial(); }
         });
         ad.show(this);
+    }
+    private void notifyReward(boolean earned) {
+        if (gameWeb != null) gameWeb.evaluateJavascript("window.spaceWingRewardResult(" + (earned ? "true" : "false") + ")", null);
+    }
+    private void loadRewarded() {
+        if (consentInformation == null || !consentInformation.canRequestAds()) return;
+        RewardedAd.load(this, BuildConfig.ADMOB_REWARDED_ID, new AdRequest.Builder().build(), new RewardedAdLoadCallback() {
+            @Override public void onAdLoaded(RewardedAd ad) { rewarded = ad; }
+            @Override public void onAdFailedToLoad(LoadAdError error) { rewarded = null; }
+        });
+    }
+    private void displayRewarded() {
+        if (consentInformation == null || !consentInformation.canRequestAds() || rewarded == null) {
+            notifyReward(false);
+            if (rewarded == null && consentInformation != null && consentInformation.canRequestAds()) loadRewarded();
+            return;
+        }
+        RewardedAd ad = rewarded;
+        rewarded = null;
+        final boolean[] earned = {false};
+        ad.setFullScreenContentCallback(new FullScreenContentCallback() {
+            @Override public void onAdDismissedFullScreenContent() { notifyReward(earned[0]); loadRewarded(); }
+            @Override public void onAdFailedToShowFullScreenContent(com.google.android.gms.ads.AdError error) { notifyReward(false); loadRewarded(); }
+        });
+        ad.show(this, reward -> earned[0] = true);
     }
     @Override protected void onDestroy() { if (banner != null) banner.destroy(); super.onDestroy(); }
 }

@@ -7,8 +7,8 @@ android {
         applicationId 'br.com.spacewing.game'
         minSdk 24
         targetSdk 35
-        versionCode 2
-        versionName '1.1.0'
+        versionCode 3
+        versionName '2.0.0'
     }
     buildFeatures { buildConfig true }
     buildTypes {
@@ -16,12 +16,15 @@ android {
             manifestPlaceholders = [admobAppId: 'ca-app-pub-3940256099942544~3347511713']
             buildConfigField 'String', 'ADMOB_BANNER_ID', '"ca-app-pub-3940256099942544/6300978111"'
             buildConfigField 'String', 'ADMOB_INTERSTITIAL_ID', '"ca-app-pub-3940256099942544/1033173712"'
+            buildConfigField 'String', 'ADMOB_REWARDED_ID', '"ca-app-pub-3940256099942544/5224354917"'
         }
         release {
             minifyEnabled false
             manifestPlaceholders = [admobAppId: 'ca-app-pub-5016396775817197~7100442927']
             buildConfigField 'String', 'ADMOB_BANNER_ID', '"ca-app-pub-5016396775817197/5595789569"'
             buildConfigField 'String', 'ADMOB_INTERSTITIAL_ID', '"ca-app-pub-5016396775817197/5100965541"'
+            // O ID de recompensa de PRODUÇÃO ainda não foi fornecido. Usar teste até configurar.
+            buildConfigField 'String', 'ADMOB_REWARDED_ID', '"ca-app-pub-3940256099942544/5224354917"'
         }
     }
     compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }

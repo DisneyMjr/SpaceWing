@@ -1,57 +1,63 @@
-# Space Wing 1.0
+# Space Wing 2.0 · Galáxia
 
-Jogo original de nave espacial em pixel art, inspirado na mecânica arcade de toque para voar. Visual baseado nas **imagens fornecidas pelo usuário**. NÃO utiliza códigos ou áudios extraídos do Flappy Bird; o APK original foi consultado só para identificação de estrutura e tipos de recursos.
+Jogo Android offline-first com motor JavaScript/Canvas em WebView e anúncios Google Mobile Ads. O projeto é uma evolução da versão 1.1.
 
-## Jogar agora
+## O que foi implementado
 
-Abra `app/src/main/assets/index.html` em um navegador moderno, no PC ou celular. Toque/clique ou use a barra de espaço para voar. Funciona offline. Inclui pontuação, recorde local, colisões, canos espaciais e sons eletrônicos gerados em tempo real.
+- Nave animada: inclinação, impulso, exaustão e partículas.
+- Obstáculos: quatro variantes visuais (tubos, energia laranja, tubos oscilantes, laser vermelho). Os estilos compartilham a base de sprites e geometria segura de colisão.
+- Quatro cenários espaciais dinâmicos em função da pontuação.
+- Novo menu inicial, tela de fim de jogo e navegação por toque.
+- Sons sintetizados com Web Audio, independentes de arquivos externos.
+- Garagem de 10 naves, com diferenças de coloração e naves desbloqueadas por cristais. Não são 10 sprites independentes.
+- Cristais colecionáveis, saldo persistido, três tipos de poderes (escudo, câmera lenta e ímã).
+- Três missões diárias com resgate de recompensas e seis conquistas automáticas.
+- Evento semanal local baseado em melhor pontuação; reinicia a cada semana.
+- Ranking online **opcional**, com API PHP/MySQL de exemplo para hospedagem própria. Sem backend configurado, a tela indica indisponibilidade. O backend demonstrativo não verifica resultados de forma autoritativa; não serve para ranking competitivo público sem controles adicionais.
+- Segunda chance opcional com anúncio recompensado: concedida somente quando a SDK confirmar a recompensa.
+- Banner e intersticial originais preservados; teste e produção separados.
 
-## Gerar APK ou AAB
+## Gerar APK
 
-1. Instale Android Studio (SDK Android 35 e JDK 17).
-2. Escolha **Open** e selecione a pasta `SpaceWing`.
-3. Aguarde sincronizar Gradle (Internet necessária na primeira vez).
-4. Menu **Build > Build Bundle(s) / APK(s) > Build APK(s)** para APK de teste.
-5. Para publicar, configure chave de assinatura e gere **Android App Bundle (AAB)**.
+Envie o conteúdo desta pasta para a raiz do repositório `DisneyMjr/SpaceWing`. O GitHub Actions `.github/workflows/android-apk.yml` gera o APK de depuração com IDs de anúncios de teste. Abra Actions > Gerar APK Space Wing > Artifacts.
 
-Observação: este pacote contém o projeto-fonte; o APK compilado não está incluído.
+Para linha de comando em ambiente com JDK 17, Android SDK 35 e Gradle 8.11.1:
 
-## Google AdMob configurado
+```
+gradle --no-daemon :app:assembleDebug
+```
 
-Os IDs fornecidos estão configurados no `app/build.gradle` **somente para a versão release**:
+APK: `app/build/outputs/apk/debug/app-debug.apk`.
 
-- ID do aplicativo: `ca-app-pub-5016396775817197~7100442927`
-- Banner: `ca-app-pub-5016396775817197/5595789569`
-- Intersticial: `ca-app-pub-5016396775817197/5100965541`
+**Observação:** esta entrega não inclui APK compilado ou AAB assinado. São necessárias compilação, instalação e testes físicos.
 
-A versão **debug usa os IDs oficiais de teste do Google** para evitar impressões e cliques de teste nos blocos reais. O AndroidManifest.xml usa `${admobAppId}` e a MainActivity lê `BuildConfig.ADMOB_BANNER_ID` e `BuildConfig.ADMOB_INTERSTITIAL_ID` definidos conforme o tipo de build.
+## AdMob
 
-O banner fica fora da área jogável; o intersticial é solicitado após a quarta derrota e respeita intervalo mínimo de 90 segundos desde a última exibição. A exibição depende do carregamento e da disponibilidade de anúncios.
+- Aplicativo de produção: `ca-app-pub-5016396775817197~7100442927`
+- Banner de produção: `ca-app-pub-5016396775817197/5595789569`
+- Intersticial de produção: `ca-app-pub-5016396775817197/5100965541`
+- Anúncio recompensado: ID de teste oficial usado **também em release como marcador temporário**, até você criar e fornecer um bloco recompensado próprio. **Substitua antes de publicar.**
+- Em debug, todos os IDs são oficiais de teste.
+- O app integra a API UMP para consentimento, mas ainda requer revisão da mensagem de consentimento, política de privacidade, avaliações de privacidade e configuração do painel AdMob antes da publicação.
 
-**Antes de distribuir a versão release:** implementar consentimento Google UMP quando aplicável, política de privacidade, preenchimento correto da seção de segurança de dados, revisão de classificação etária e testes em dispositivo. IDs de produção configurados não garantem anúncios ativos, receita ou aprovação da conta AdMob.
+## Ativar ranking no cPanel
 
-O projeto usa `com.google.android.gms:play-services-ads:25.5.0` e ainda não foi compilado/testado em dispositivo.
+1. Crie um banco de dados MySQL e usuário com permissão de leitura e escrita.
+2. Execute `servidor-ranking/schema.sql` no phpMyAdmin.
+3. Envie `servidor-ranking/api.php` e uma cópia de `config.example.php` com nome `config.php` para uma pasta HTTPS no seu cPanel.
+4. Preencha `dsn`, `user`, `password` e `salt` no `config.php`. **Proteja o arquivo config.php do acesso web** ou coloque a configuração fora da pasta pública e altere o caminho no `api.php`.
+5. Edite `app/src/main/assets/ranking-config.js`, colocando a URL HTTPS completa para `api.php`.
+6. Recompile o APK.
 
-## REA e análise
+Este ranking é experimental: os envios são feitos pelo cliente, portanto **podem ser falsificados**. Antes de oferecer um ranking público com prêmios ou competição, é preciso implementar autenticação, validação de partidas no servidor, proteção contra abuso e moderação de nomes. Não use pontuação enviada pelo cliente como prova de desempenho.
 
-O arquivo original tem `assets/gfx/atlas.png`, `assets/sounds/sfx_die.ogg`, `sfx_hit.ogg`, `sfx_point.ogg`, `sfx_swooshing.ogg`, `sfx_wing.ogg` e `libandengine.so` para três ABIs. Isso mostra que é um aplicativo com imagens agregadas em atlas e sons OGG e motor AndEngine, sem implicar autorização para reutilizar seus recursos.
+## Comandos de atualização
 
-REA: https://github.com/morluto/rea. Para análise aprofundada de classes e métodos com REA, instale Node/JDK e JADX e use `npx rea-agents setup` em seu computador. Esta entrega **não afirma ter executado o REA**.
+```
+git add .
+git commit -m "Space Wing 2.0: garagem, missões e poderes"
+git pull --rebase origin main
+git push origin main
+```
 
-## Estrutura
-
-- `index.html` e `game.js`: jogo em Canvas com controle de toque e teclado.
-- `nave.png`: imagem derivada da primeira referência enviada, com fundo verde removido.
-- `MainActivity.java`: aplicativo Android com WebView e AdMob nativo.
-- `AndroidManifest.xml`, Gradle: projeto Android Studio.
-
-## Limitações
-
-Não foi realizado build Android nem teste em dispositivo nesta entrega. Em tela grande a área de jogo mantém o aspecto de 360x640; o banner AdMob reduz a área útil automaticamente. Sons são sintetizados pelo Web Audio API, sem reutilização dos arquivos OGG do jogo original.
-
-## Pacote final de preparação (30/10/2026)
-
-Foi adicionado Google UMP (`user-messaging-platform:3.2.0`) antes do carregamento de anúncios e criados os arquivos em `publicacao/`. **Ainda falta testar a integração UMP, disponibilizar uma opção de revisão de privacidade quando exigida e finalizar a mensagem na plataforma AdMob.** A política de privacidade incluída é apenas um modelo, não uma política pública pronta.
-
-### Limitação da entrega
-Este ambiente não tem Android SDK e Gradle disponíveis: não foi possível compilar, assinar nem validar APK ou AAB. O AAB para Google Play requer assinatura privada do desenvolvedor, que não deve ser enviada em conversa pública. Na primeira sincronização, o Android Studio precisa baixar o plugin Gradle e as bibliotecas do Google. O projeto foi preparado, mas não foi submetido a testes de compilação nem de execução no Android.
+Não execute `git push --force`.
