@@ -1,0 +1,13 @@
+SPACE WING 1.1
+
+NOVO: icone Android com a nave, em mipmap e adaptive icon.
+NOVO: obstaculos futuristas substituem os tubos verdes no canvas.
+MANTIDO: correcao da tela azul, anuncios AdMob, sons e pontuacao.
+
+COMANDOS:
+git add .
+git commit -m "Space Wing 1.1 icone e tubos futuristas"
+git pull --rebase origin main
+git push origin main
+
+No GitHub Actions baixe o APK em Artifacts depois de compilar.

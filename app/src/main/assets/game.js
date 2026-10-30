@@ -4,6 +4,8 @@ function loadBest(){try{return Number(localStorage.getItem('spacewingBest')||0)|
 function saveBest(value){try{localStorage.setItem('spacewingBest',String(value))}catch(e){}}
 const W=360,H=640; let scale=1,offX=0,offY=0,last=0,mode='title',score=0,best=loadBest(),failures=0,elapsed=0,scroll=0,spawn=0,shipY=H*.44,vel=0,pipes=[],particles=[],sound=true,actx=null,shimmer=0;
 const ship=new Image();ship.src='nave.png';
+const pipeTop=new Image();pipeTop.src='obstaculo_superior.png';
+const pipeBottom=new Image();pipeBottom.src='obstaculo_inferior.png';
 function resize(){const d=window.devicePixelRatio||1;canvas.width=Math.round(innerWidth*d);canvas.height=Math.round(innerHeight*d);scale=Math.min(canvas.width/W,canvas.height/H);offX=(canvas.width-W*scale)/2;offY=(canvas.height-H*scale)/2;ctx.imageSmoothingEnabled=false}window.addEventListener('resize',resize);resize();
 let stars=Array.from({length:95},(_,i)=>({x:(i*73.7+17)%W,y:(i*39.3+61)%H,r:i%11===0?2:1,s:.12+(i%4)*.08}));
 function beep(freq=550,d=.08,type='square',endFreq=freq*.7){if(!sound)return;try{actx??=new(window.AudioContext||window.webkitAudioContext)();if(actx.state==='suspended')actx.resume();let o=actx.createOscillator(),g=actx.createGain(),t=actx.currentTime;o.type=type;o.frequency.setValueAtTime(freq,t);o.frequency.exponentialRampToValueAtTime(Math.max(30,endFreq),t+d);g.gain.setValueAtTime(.055,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g);g.connect(actx.destination);o.start(t);o.stop(t+d)}catch(e){}}
@@ -20,9 +22,16 @@ ctx.fillStyle='#13538a';ctx.beginPath();ctx.arc(-52,144,116,0,Math.PI*2);ctx.fil
 ctx.fillStyle='#57378c';ctx.beginPath();ctx.arc(339,98,52,0,Math.PI*2);ctx.fill();for(let i=0;i<5;i++)rect(298,82+i*11,77,3,'#794ba0');
 for(const s of stars){const alpha=.55+.35*Math.sin(shimmer*2+s.y);ctx.fillStyle=`rgba(172,235,255,${alpha})`;rect(s.x,s.y,s.r,s.r,ctx.fillStyle);if(s.r===2){rect(s.x-3,s.y,8,1,'#93e5ff');rect(s.x,s.y-3,1,8,'#93e5ff')}}
 for(let i=0;i<16;i++){let x=i*25;let h=35+((i*13)%46);rect(x,H-88-h,17,h,'#142954');rect(x+6,H-83-h,2,4,'#31a5db');rect(x+6,H-66-h,2,4,'#ed9b4a')}rect(0,H-42,W,42,'#1d3153');rect(0,H-42,W,5,'#8099ae');for(let x=-40;x<W+40;x+=42){rect(x-(scroll*1.4%42),H-36,23,5,'#f18b2d');rect(x-(scroll*1.4%42),H-6,32,3,'#354b7b')}}
-function obstacle(p){let x=Math.round(p.x),pw=58,top=p.cy-p.gap/2,bot=p.cy+p.gap/2;
-function pipe(y,h,capTop){rect(x+5,y,pw-10,h,'#074c65');rect(x+10,y,pw-19,h,'#06c87b');rect(x+17,y,10,h,'#7dffc0');rect(x+39,y,7,h,'#009d65');let capY=capTop?y+h-20:y;rect(x,capY,pw,20,'#052e51');rect(x+4,capY+3,pw-8,14,'#13e291');rect(x+11,capY+5,27,5,'#a5ffd1');rect(x+3,capY+16,pw-6,4,'#647a9b')}
-pipe(0,top,true);pipe(bot,H-bot,false)}
+function obstacle(p){let x=Math.round(p.x),pw=58,top=Math.max(0,p.cy-p.gap/2),bot=Math.min(H,p.cy+p.gap/2);
+function fallback(y,h,capTop){rect(x+5,y,pw-10,h,'#132b4a');rect(x+13,y,pw-26,h,'#137dc5');rect(x+19,y,11,h,'#72f6ff');let capY=capTop?y+h-20:y;rect(x,capY,pw,20,'#17263e');rect(x+4,capY+3,pw-8,14,'#6484a7');rect(x+9,capY+6,pw-18,7,'#15e3fb');}
+// Mantém o acabamento metálico na ponta visível dos tubos.
+function drawPipe(im,y,h,upper){if(h<=0)return;if(!im.complete||!im.naturalWidth){fallback(y,h,upper);return}
+const w=im.naturalWidth,ih=im.naturalHeight,cap=Math.min(95,Math.round(ih*.22)),endHeight=Math.min(30,h),bodyH=Math.max(0,h-endHeight);
+ctx.save();ctx.beginPath();ctx.rect(x,y,pw,h);ctx.clip();ctx.imageSmoothingEnabled=false;
+if(upper){if(bodyH>0)ctx.drawImage(im,0,0,w,ih-cap,x,y,pw,bodyH);ctx.drawImage(im,0,ih-cap,w,cap,x,y+bodyH,pw,endHeight)}
+else{ctx.drawImage(im,0,0,w,cap,x,y,pw,endHeight);if(bodyH>0)ctx.drawImage(im,0,cap,w,ih-cap,x,y+endHeight,pw,bodyH)}
+ctx.restore()}
+drawPipe(pipeTop,0,top,true);drawPipe(pipeBottom,bot,H-bot,false)}
 function shipDraw(){ctx.save();ctx.translate(112,shipY);ctx.rotate(Math.max(-.37,Math.min(.75,vel/530)));let bob=mode==='title'?Math.sin(shimmer*3)*4:0;if(ship.complete&&ship.naturalWidth){ctx.drawImage(ship,-33,-22+bob,67,44)}else{rect(-23,-12+bob,42,25,'#ffde00');rect(0,-10+bob,19,19,'#29c5ff');rect(-36,-6+bob,16,11,'#ff6a29');rect(-8,13+bob,19,8,'#ff883b')}ctx.restore()}
 function center(s,y,size=18,color='#fff'){ctx.font=`900 ${size}px system-ui`;ctx.fillStyle='#07112c';ctx.textAlign='center';ctx.fillText(s,W/2+2,y+3);ctx.fillStyle=color;ctx.fillText(s,W/2,y)}
 function draw(){ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='#000';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.setTransform(scale,0,0,scale,offX,offY);backdrop();for(const p of pipes)obstacle(p);for(const p of particles)rect(p.x,p.y,4,4,p.c);shipDraw();
