@@ -1,0 +1,22 @@
+SPACE WING 2.1 - CORRECOES VISUAIS E DIAGNOSTICO DE ANUNCIOS
+
+1. Nave e obstaculos: sprites recortados e alfa normalizado (sem artefatos transparentes).
+2. Icone: imagem de nave no launcher Android e icone adaptativo com transparencia.
+3. Tela: canvas passa a ocupar a altura disponivel, sem faixas pretas de letterboxing.
+4. AdMob: erros de carregamento vao ao Logcat com a tag SpaceWingAds.
+
+ATENCAO ADS:
+- GitHub Actions gera assembleDebug, e por isso os anuncios sao de TESTE, nao os seus anuncios de producao.
+- Mesmo anuncios de teste precisam de conexao, Play Services, configuracao UMP e requisicao permitida.
+- O banner nao exibido nao significa necessariamente defeito visual; confira Logcat para o codigo da falha.
+- No seu Windows com ADB: adb logcat -s SpaceWingAds:E SpaceWingAds:I
+- Nunca clique nos seus proprios anuncios reais.
+- Para publicacao, gere AAB de release assinado e defina ID de recompensado real.
+
+ENVIO AO GITHUB:
+git add .
+git commit -m "Space Wing 2.1 - corrige sprites, icone e anuncios"
+git pull --rebase origin main
+git push origin main
+
+Ainda e necessario instalar e testar o APK compilado no celular.

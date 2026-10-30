@@ -2,6 +2,7 @@ package br.com.spacewing.game;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.util.Log;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -73,6 +74,7 @@ public class MainActivity extends Activity {
         }, requestError -> {
             // Em alguns casos, o UMP permite anúncios baseados no consentimento anterior.
             if (consentInformation.canRequestAds()) initializeAds();
+            else Log.w("SpaceWingAds", "Consentimento ainda nao permite anuncios");
         });
     }
 
@@ -83,6 +85,10 @@ public class MainActivity extends Activity {
             MobileAds.initialize(this, status -> {});
             runOnUiThread(() -> {
                 if (!isFinishing() && !isDestroyed()) {
+                    banner.setAdListener(new com.google.android.gms.ads.AdListener() {
+                        @Override public void onAdLoaded(){ Log.i("SpaceWingAds", "Banner carregado"); }
+                        @Override public void onAdFailedToLoad(LoadAdError e){ Log.e("SpaceWingAds", "Banner nao carregou: " + e.getCode() + " " + e.getMessage()); }
+                    });
                     banner.loadAd(new AdRequest.Builder().build());
                     loadInterstitial();
                     loadRewarded();
@@ -95,7 +101,7 @@ public class MainActivity extends Activity {
         if (consentInformation == null || !consentInformation.canRequestAds()) return;
         InterstitialAd.load(this, INTERSTITIAL_ID, new AdRequest.Builder().build(), new InterstitialAdLoadCallback() {
             @Override public void onAdLoaded(InterstitialAd ad) { interstitial = ad; }
-            @Override public void onAdFailedToLoad(LoadAdError error) { interstitial = null; }
+            @Override public void onAdFailedToLoad(LoadAdError error) { interstitial = null; Log.e("SpaceWingAds", "Intersticial: " + error.getCode() + " " + error.getMessage()); }
         });
     }
     private void displayInterstitial() {
@@ -117,7 +123,7 @@ public class MainActivity extends Activity {
         if (consentInformation == null || !consentInformation.canRequestAds()) return;
         RewardedAd.load(this, BuildConfig.ADMOB_REWARDED_ID, new AdRequest.Builder().build(), new RewardedAdLoadCallback() {
             @Override public void onAdLoaded(RewardedAd ad) { rewarded = ad; }
-            @Override public void onAdFailedToLoad(LoadAdError error) { rewarded = null; }
+            @Override public void onAdFailedToLoad(LoadAdError error) { rewarded = null; Log.e("SpaceWingAds", "Recompensado: " + error.getCode() + " " + error.getMessage()); }
         });
     }
     private void displayRewarded() {
