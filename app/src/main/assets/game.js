@@ -1,6 +1,8 @@
 (()=>{'use strict';
 const canvas=document.querySelector('#game'),ctx=canvas.getContext('2d'),mute=document.querySelector('#mute');
-const W=360,H=640; let scale=1,offX=0,offY=0,last=0,mode='title',score=0,best=Number(localStorage.getItem('spacewingBest')||0),failures=0,elapsed=0,scroll=0,spawn=0,shipY=H*.44,vel=0,pipes=[],particles=[],sound=true,actx=null,shimmer=0;
+function loadBest(){try{return Number(localStorage.getItem('spacewingBest')||0)||0}catch(e){return 0}}
+function saveBest(value){try{localStorage.setItem('spacewingBest',String(value))}catch(e){}}
+const W=360,H=640; let scale=1,offX=0,offY=0,last=0,mode='title',score=0,best=loadBest(),failures=0,elapsed=0,scroll=0,spawn=0,shipY=H*.44,vel=0,pipes=[],particles=[],sound=true,actx=null,shimmer=0;
 const ship=new Image();ship.src='nave.png';
 function resize(){const d=window.devicePixelRatio||1;canvas.width=Math.round(innerWidth*d);canvas.height=Math.round(innerHeight*d);scale=Math.min(canvas.width/W,canvas.height/H);offX=(canvas.width-W*scale)/2;offY=(canvas.height-H*scale)/2;ctx.imageSmoothingEnabled=false}window.addEventListener('resize',resize);resize();
 let stars=Array.from({length:95},(_,i)=>({x:(i*73.7+17)%W,y:(i*39.3+61)%H,r:i%11===0?2:1,s:.12+(i%4)*.08}));
@@ -9,7 +11,7 @@ mute.onclick=e=>{e.stopPropagation();sound=!sound;mute.textContent=sound?'🔊':
 function reset(){mode='play';score=0;elapsed=0;scroll=0;spawn=0;shipY=H*.45;vel=-185;pipes=[];particles=[];beep(500,.08,'triangle',760)}
 function flap(){if(mode==='title'||mode==='over'){reset();return}if(mode!=='play')return;vel=-245;beep(620,.065,'square',420);for(let i=0;i<5;i++)particles.push({x:104,y:shipY+9,vx:-45-Math.random()*85,vy:(Math.random()-.5)*65,t:.27,c:i%2?'#ff7a28':'#ffe95b'})}
 canvas.addEventListener('pointerdown',e=>{e.preventDefault();flap()});window.addEventListener('keydown',e=>{if(e.code==='Space'||e.code==='ArrowUp'){e.preventDefault();if(!e.repeat)flap()}});
-function lose(){if(mode!=='play')return;mode='over';failures++;beep(180,.24,'sawtooth',65);if(score>best){best=score;localStorage.setItem('spacewingBest',best)}if(failures%4===0&&window.AndroidAds?.showInterstitial)window.AndroidAds.showInterstitial()}
+function lose(){if(mode!=='play')return;mode='over';failures++;beep(180,.24,'sawtooth',65);if(score>best){best=score;saveBest(best)}if(failures%4===0&&window.AndroidAds?.showInterstitial)window.AndroidAds.showInterstitial()}
 function update(dt){shimmer+=dt;scroll+=dt*42;for(const s of stars){s.x-=s.s*dt*30;if(s.x<0)s.x+=W}for(const p of particles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.t-=dt}particles=particles.filter(p=>p.t>0);if(mode!=='play')return;elapsed+=dt;vel+=590*dt;shipY+=vel*dt;spawn-=dt;if(spawn<=0){spawn=1.52;let gap=168-Math.min(score,25)*1.5;let cy=145+Math.random()*300;pipes.push({x:W+30,cy,gap,passed:false})}const speed=128+Math.min(score,35)*1.8;for(const p of pipes){p.x-=speed*dt;if(!p.passed&&p.x+59<105){p.passed=true;score++;beep(840,.10,'triangle',1160)}if(p.x<136&&p.x+57>90){let top=p.cy-p.gap/2,bot=p.cy+p.gap/2;if(shipY-14<top||shipY+14>bot)lose()}}pipes=pipes.filter(p=>p.x>-85);if(shipY<24||shipY>H-42)lose()}
 function rect(x,y,w,h,c){ctx.fillStyle=c;ctx.fillRect(Math.round(x),Math.round(y),Math.ceil(w),Math.ceil(h))}
 function backdrop(){let grad=ctx.createLinearGradient(0,0,0,H);grad.addColorStop(0,'#030a21');grad.addColorStop(.55,'#081d4b');grad.addColorStop(1,'#162d62');ctx.fillStyle=grad;ctx.fillRect(0,0,W,H);
