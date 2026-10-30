@@ -1,0 +1,14 @@
+COMO GERAR E BAIXAR O APK SEM ANDROID STUDIO
+
+1. No GitHub, crie um repositório privado ou público para SpaceWing.
+2. Envie TODO o conteúdo da pasta SpaceWing para a RAIZ do repositório, incluindo a pasta oculta .github.
+3. Abra a aba Actions > Gerar APK Space Wing > Run workflow.
+4. Aguarde a execução concluir. Abra a execução concluída.
+5. Em Artifacts, baixe SpaceWing-APK-Android-teste.
+6. Extraia o ZIP de Artifacts e instale app-debug.apk no seu Android.
+
+IMPORTANTE
+- Esse é um APK debug de teste, com IDs oficiais de teste do AdMob, NÃO com anúncios reais.
+- Para publicar e usar IDs reais, precisa compilar versão release assinada por uma chave privada sua.
+- A compilação remota ainda não foi executada nem validada.
+- O primeiro build pode falhar se houver dependências incompatíveis. Nesse caso, consulte o log da aba Actions.

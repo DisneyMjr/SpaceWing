@@ -1,0 +1,33 @@
+plugins { id 'com.android.application' }
+
+android {
+    namespace 'br.com.spacewing.game'
+    compileSdk 35
+    defaultConfig {
+        applicationId 'br.com.spacewing.game'
+        minSdk 23
+        targetSdk 35
+        versionCode 1
+        versionName '1.0.0'
+    }
+    buildFeatures { buildConfig true }
+    buildTypes {
+        debug {
+            manifestPlaceholders = [admobAppId: 'ca-app-pub-3940256099942544~3347511713']
+            buildConfigField 'String', 'ADMOB_BANNER_ID', '"ca-app-pub-3940256099942544/6300978111"'
+            buildConfigField 'String', 'ADMOB_INTERSTITIAL_ID', '"ca-app-pub-3940256099942544/1033173712"'
+        }
+        release {
+            minifyEnabled false
+            manifestPlaceholders = [admobAppId: 'ca-app-pub-5016396775817197~7100442927']
+            buildConfigField 'String', 'ADMOB_BANNER_ID', '"ca-app-pub-5016396775817197/5595789569"'
+            buildConfigField 'String', 'ADMOB_INTERSTITIAL_ID', '"ca-app-pub-5016396775817197/5100965541"'
+        }
+    }
+    compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+}
+
+dependencies {
+    implementation 'com.google.android.gms:play-services-ads:25.5.0'
+    implementation 'com.google.android.ump:user-messaging-platform:3.2.0'
+}
